@@ -6,7 +6,7 @@ import { ConfigModule } from '@nestjs/config';import { ProductModule } from './p
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGO_URL as string),
+    MongooseModule.forRoot('mongodb://127.0.0.1:27017/product_db'),
     ProductModule,
   ],
 })
