@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - micronet
+
+  backend1:
+    build: ./backend1
+    container_name: backend1
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      MONGO_URL: mongodb://mongodb:27017/auth_db
+      JWT_SECRET: supersecret
+    depends_on:
+      - mongodb
+    networks:
+      - micronet
+
+  backend2:
+    build: ./backend2
+    container_name: backend2
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      MONGO_URL: mongodb://mongodb:27017/product_db
+    depends_on:
+      - mongodb
+    networks:
+      - micronet
+
+  backend3:
+    build: ./backend3
+    container_name: backend3
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      MONGO_URL: mongodb://mongodb:27017/order_db
+      PRODUCT_URL: http://backend2:3002
+    depends_on:
+      - mongodb
+      - backend2
+    networks:
+      - micronet
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      AUTH_URL: http://backend1:3001
+      PRODUCT_URL: http://backend2:3002
+      ORDER_URL: http://backend3:3003
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+    networks:
+      - micronet
+
+networks:
+  micronet:
+    driver: bridge
+
+volumes:
+  mongo_data:
